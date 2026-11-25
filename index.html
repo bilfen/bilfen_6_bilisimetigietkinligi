@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siber Kalkan - 6. Sınıf BTY Güvenlik ve Etik Oyunu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Chakra Petch for Cyber Gaming Feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for Procedural Web Audio Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a 60%, #020617);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-cyber {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        /* Subtle cyber grid background */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* Glowing cards and buttons */
+        .cyber-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.08);
+        }
+
+        .btn-cyber {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cyber:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+        }
+
+        .btn-cyber:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        /* Hotspot pulsing animation on simulated screens */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 12px rgba(244, 63, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+        }
+
+        .hotspot-hint {
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="cyber-grid flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Top Navigation / HUD -->
+    <header class="w-full border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-slate-950 shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-cyber text-lg sm:text-xl font-bold tracking-wide text-white leading-tight">
+                        SİBER KALKAN <span class="text-cyan-400 text-sm font-normal hidden sm:inline">| BTY.6.4.1</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">6. Sınıf Bilişim Etiği ve Güvenlik Akademisi</p>
+                </div>
+            </div>
+
+            <!-- Live Game Stats (Hidden on Start Screen) -->
+            <div id="hud-stats" class="hidden flex items-center gap-2 sm:gap-4">
+                <!-- Shield Energy (Lives) -->
+                <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl" title="Kalkan Enerjisi">
+                    <span class="text-xs text-slate-400 hidden md:inline">Kalkan:</span>
+                    <div id="hearts-container" class="flex gap-1 text-rose-500 text-sm sm:text-base">
+                        <i class="fa-solid fa-shield"></i>
+                        <i class="fa-solid fa-shield"></i>
+                        <i class="fa-solid fa-shield"></i>
+                    </div>
+                </div>
+
+                <!-- Score -->
+                <div class="flex items-center gap-1.5 bg-slate-900/90 border border-cyan-500/30 px-3 py-1.5 rounded-xl">
+                    <i class="fa-solid fa-star text-amber-400 text-sm"></i>
+                    <span id="score-display" class="font-cyber font-bold text-cyan-300 text-sm sm:text-base">0</span>
+                </div>
+
+                <!-- Streak Badge -->
+                <div id="streak-badge" class="hidden sm:flex items-center gap-1 bg-amber-500/20 border border-amber-500/40 px-2.5 py-1.5 rounded-xl text-amber-300 text-xs font-bold">
+                    <i class="fa-solid fa-fire"></i>
+                    <span id="streak-count">0x</span>
+                </div>
+            </div>
+
+            <!-- Controls: Kazanım Info & Sound Toggle -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleOutcomesModal(true)" class="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-cyan-300 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition" title="Ders Kazanımlarını Gör">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span class="hidden sm:inline">Kazanımlar</span>
+                </button>
+                <button id="sound-btn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 transition" title="Sesi Aç/Kapat">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 flex flex-col justify-center">
+
+        <!-- ================= SCREEN 1: START MENU ================= -->
+        <section id="start-screen" class="cyber-card rounded-3xl p-6 sm:p-10 text-center animate-pop">
+            <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-cyan-500/25 animate-float">
+                <i class="fa-solid fa-user-secret text-4xl"></i>
+            </div>
+
+            <span class="inline-block px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold tracking-wider uppercase mb-2">
+                6. Sınıf Bilişim Teknolojileri ve Yazılım
+            </span>
+
+            <p class="text-amber-300 font-semibold text-sm sm:text-base tracking-wide mb-3">
+                Bilfen Eğitim Kurumları
+            </p>
+
+            <h2 class="font-cyber text-3xl sm:text-4xl font-bold text-white mb-3">
+                Siber Dedektif Akademisine Hoş Geldin!
+            </h2>
+
+            <p class="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base mb-8 leading-relaxed">
+                Dijital dünyada karşılaşılan 5 gerçek vakayı çözmeye hazır mısın? Her vakada 4 adımlı güvenlik protokolünü uygulayarak hem arkadaşlarını koru hem de <strong class="text-cyan-300">Siber Kalkan Rozeti</strong> kazan!
+            </p>
+
+            <!-- 4 Süreç Bileşeni Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8 text-left">
+                <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase mb-1">
+                        <span class="w-6 h-6 rounded-lg bg-rose-500/20 flex items-center justify-center font-cyber">a</span>
+                        1. Adım: Risk Avı
+                    </div>
+                    <p class="text-xs text-slate-300">Ekrandaki dijital güvenlik risklerini ve tuzakları tespit et.</p>
+                </div>
+
+                <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase mb-1">
+                        <span class="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center font-cyber">c</span>
+                        2. Adım: Tür Ayrımı
+                    </div>
+                    <p class="text-xs text-slate-300">Olayın etik ihlal mi yoksa bilişim suçu mu olduğunu ayırt et.</p>
+                </div>
+
+                <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase mb-1">
+                        <span class="w-6 h-6 rounded-lg bg-cyan-500/20 flex items-center justify-center font-cyber">b</span>
+                        3. Adım: Önlem Kalkanı
+                    </div>
+                    <p class="text-xs text-slate-300">Risklere karşı alınabilecek en doğru güvenlik önlemini seç.</p>
+                </div>
+
+                <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase mb-1">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center font-cyber">ç</span>
+                        4. Adım: Değerlendirme
+                    </div>
+                    <p class="text-xs text-slate-300">Yaşanan ihlali güvenlik önlemleri açısından değerlendir.</p>
+                </div>
+            </div>
+
+            <!-- Player Name Input (Optional) & Start Buttons -->
+            <div class="max-w-md mx-auto flex flex-col sm:flex-row gap-3 justify-center">
+                <input type="text" id="player-name-input" maxlength="24" placeholder="Dedektif Adın (Örn: Kerem veya 6-A)" 
+                    class="w-full px-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 text-sm">
+                <button onclick="startGame()" class="btn-cyber w-full sm:w-auto whitespace-nowrap px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-cyber font-bold text-base shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Göreve Başla
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 2: ACTIVE GAMEPLAY ================= -->
+        <section id="game-screen" class="hidden space-y-5 animate-pop">
+            
+            <!-- Mission Progress Bar & Step Indicator -->
+            <div class="cyber-card rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div id="case-badge" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 font-cyber font-bold text-sm">
+                        VAKA 1 / 5
+                    </div>
+                    <h2 id="case-title" class="font-bold text-base sm:text-lg text-white truncate">
+                        Bedava Elmas Tuzağı
+                    </h2>
+                </div>
+
+                <!-- 4-Step Progress Pills -->
+                <div class="grid grid-cols-4 gap-1.5 w-full md:w-auto">
+                    <div id="pill-0" class="px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border transition-all">
+                        <span class="font-cyber">a)</span> Risk
+                    </div>
+                    <div id="pill-1" class="px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border transition-all">
+                        <span class="font-cyber">c)</span> Suç/Etik
+                    </div>
+                    <div id="pill-2" class="px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border transition-all">
+                        <span class="font-cyber">b)</span> Önlem
+                    </div>
+                    <div id="pill-3" class="px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border transition-all">
+                        <span class="font-cyber">ç)</span> Kriz Çöz
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Stage Grid: Left = Device Simulation / Story, Right = Interactive Challenge -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                
+                <!-- Left Column: Interactive Device Simulator -->
+                <div class="lg:col-span-5 cyber-card rounded-3xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-desktop"></i> Olay Yeri İncelemesi
+                            </span>
+                            <span id="scan-status" class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <i class="fa-solid fa-magnifying-glass mr-1"></i>İncele
+                            </span>
+                        </div>
+
+                        <!-- Simulated Device Frame -->
+                        <div id="device-mockup" class="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-inner mb-4">
+                            <!-- Dynamically injected simulated screen -->
+                        </div>
+                    </div>
+
+                    <!-- Scenario Context Text -->
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5">
+                        <p id="case-story" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            <!-- Story text -->
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column: Step Question & Interactive Choices -->
+                <div class="lg:col-span-7 cyber-card rounded-3xl p-5 sm:p-7 flex flex-col justify-between">
+                    <div>
+                        <!-- Active Kazanım Sub-objective Tag -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <span id="step-objective-badge" class="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                                <i class="fa-solid fa-crosshairs"></i> BTY.6.4.1.a — Güvenlik Riskini Belirle
+                            </span>
+                        </div>
+
+                        <!-- Hotspot Instruction Banner (Only shown on Step 0 before clicking clue) -->
+                        <div id="hotspot-prompt" class="hidden mb-4 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs sm:text-sm flex items-center gap-3">
+                            <i class="fa-solid fa-hand-pointer text-xl text-rose-400 animate-bounce"></i>
+                            <span><strong>Dedektif Görevi:</strong> Önce sol taraftaki cihaz ekranında şüpheli veya riskli gördüğün alana tıkla!</span>
+                        </div>
+
+                        <!-- Question Prompt -->
+                        <h3 id="question-text" class="text-lg sm:text-xl font-bold text-white mb-5 leading-snug">
+                            Soru metni buraya gelecek...
+                        </h3>
+
+                        <!-- Options Grid -->
+                        <div id="options-container" class="space-y-3">
+                            <!-- Option buttons injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Instant Pedagogical Feedback Box -->
+                    <div id="feedback-box" class="hidden mt-6 p-4 rounded-2xl border transition-all animate-pop">
+                        <div class="flex items-start gap-3">
+                            <div id="feedback-icon" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"></div>
+                            <div class="flex-grow">
+                                <h4 id="feedback-title" class="font-bold text-sm sm:text-base mb-1"></h4>
+                                <p id="feedback-text" class="text-xs sm:text-sm leading-relaxed opacity-95"></p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button id="next-step-btn" onclick="nextStep()" class="btn-cyber px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm flex items-center gap-2">
+                                <span>Devam Et</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 3: RESULTS & CERTIFICATE ================= -->
+        <section id="result-screen" class="hidden cyber-card rounded-3xl p-6 sm:p-10 text-center animate-pop">
+            <div id="result-medal" class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-600 flex items-center justify-center text-slate-950 shadow-2xl shadow-amber-500/30 animate-float">
+                <i class="fa-solid fa-award text-5xl"></i>
+            </div>
+
+            <span id="result-rank-badge" class="inline-block px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">
+                UZMAN SİBER DEDEKTİF
+            </span>
+
+            <h2 class="font-cyber text-2xl sm:text-4xl font-bold text-white mb-2">
+                Tebrikler, <span id="cert-player-name" class="text-cyan-400">Dedektif</span>!
+            </h2>
+            <p id="result-summary-text" class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto mb-6">
+                Tüm siber güvenlik vakalarını başarıyla inceledin ve dijital kalkanını kurdun.
+            </p>
+
+            <!-- Total Score Highlight -->
+            <div class="inline-flex items-center gap-6 bg-slate-900/90 border border-cyan-500/30 px-6 py-3.5 rounded-2xl mb-8">
+                <div>
+                    <div class="text-xs text-slate-400">Toplam Puan</div>
+                    <div id="final-score" class="font-cyber text-2xl sm:text-3xl font-bold text-cyan-400">0</div>
+                </div>
+                <div class="h-8 w-px bg-slate-800"></div>
+                <div>
+                    <div class="text-xs text-slate-400">Doğruluk Oranı</div>
+                    <div id="final-accuracy" class="font-cyber text-2xl sm:text-3xl font-bold text-emerald-400">%100</div>
+                </div>
+            </div>
+
+            <!-- BTY.6.4.1 Süreç Bileşenleri Mastery Report -->
+            <div class="max-w-3xl mx-auto bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-8 text-left">
+                <h3 class="font-cyber text-sm font-bold text-cyan-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple"></i> BTY.6.4.1 Kazanım Süreç Bileşenleri Karnesi
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="mastery-grid">
+                    <!-- Mastery bars injected via JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="restartGame()" class="btn-cyber px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-cyber font-bold text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Yeniden Oyna
+                </button>
+                <button onclick="copySummaryToClipboard()" id="copy-btn" class="btn-cyber px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-copy"></i> Sonuç Raporunu Kopyala
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-900">
+        6. Sınıf Bilişim Teknolojileri ve Yazılım • BTY.6.4.1 Bilişim Etiği ve Güvenlik Önlemleri
+    </footer>
+
+    <!-- ================= MODAL: KAZANIM BİLGİSİ ================= -->
+    <div id="outcomes-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="cyber-card max-w-xl w-full rounded-3xl p-6 animate-pop">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                <h3 class="font-cyber text-lg font-bold text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> Ders Kazanımı ve Süreç Bileşenleri
+                </h3>
+                <button onclick="toggleOutcomesModal(false)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-sm text-slate-300">
+                <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 font-semibold text-cyan-200">
+                    BTY.6.4.1. Bilişim etiği kapsamında güvenlik önlemlerini yönetebilme
+                </div>
+                <ul class="space-y-2.5 text-xs sm:text-sm">
+                    <li class="flex gap-2.5">
+                        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold h-fit">a</span>
+                        <span>Bilişim etiği kapsamındaki güvenlik risklerini belirler.</span>
+                    </li>
+                    <li class="flex gap-2.5">
+                        <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold h-fit">b</span>
+                        <span>Bilişim etiği kapsamındaki güvenlik risklerine karşı alınabilecek önlemleri belirler.</span>
+                    </li>
+                    <li class="flex gap-2.5">
+                        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold h-fit">c</span>
+                        <span>Bilişim suçlarının türlerini bilişim etiği kapsamında ayırt eder.</span>
+                    </li>
+                    <li class="flex gap-2.5">
+                        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold h-fit">ç</span>
+                        <span>Karşılaşılan bilişim suçu veya bilişim etiği ihlalini güvenlik önlemleri açısından değerlendirir.</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="toggleOutcomesModal(false)" class="px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-sm">
+                    Anladım
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast-msg" class="hidden fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl bg-emerald-600 text-white text-sm font-semibold shadow-xl flex items-center gap-2 animate-pop">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-text">Kopyalandı!</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. AUDIO SYNTHESIZER (Tone.js)
+        // ==========================================
+        let soundEnabled = true;
+        let synth = null;
+
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!synth) return;
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n", now);
+                } else if (type === 'scan') {
+                    synth.triggerAttackRelease(["E5", "B5"], "16n", now);
+                } else if (type === 'correct') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5"], "16n", now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(["F3", "E3"], "8n", now);
+                } else if (type === 'victory') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n", now);
+                }
+            } catch (e) {
+                // Ignore audio errors if blocked by browser autoplay policy
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            icon.className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-rose-400';
+        }
+
+        // ==========================================
+        // 2. CURRICULUM CASE DATA (BTY.6.4.1 a, b, c, ç)
+        // ==========================================
+        const casesData = [
+            {
+                id: 1,
+                title: "Bedava Elmas Tuzağı",
+                story: "6. sınıf öğrencisi Kerem, oyun sohbetinde 'Tebrikler! Ücretsiz 5000 elmas kazandınız' mesajındaki bağlantıya tıklar ve açılan sayfaya oyun şifresini girer. Kısa süre sonra hesabına erişemez.",
+                screenHTML: `
+                    <div class="bg-slate-900 px-3 py-2 border-b border-slate-800 flex items-center gap-2 text-xs text-slate-400">
+                        <i class="fa-solid fa-gamepad text-purple-400"></i>
+                        <span>Oyun Sohbet Penceresi — @Kerem_6B</span>
+                    </div>
+                    <div class="p-4 space-y-3 text-xs">
+                        <div class="bg-slate-800/80 p-2.5 rounded-xl text-slate-300 max-w-[85%]">
+                            <span class="text-emerald-400 font-bold block mb-0.5">Arda_TR:</span>
+                            Maça hazır mısın Kerem?
+                        </div>
+                        <div class="bg-slate-800/90 p-3 rounded-xl border border-slate-700 text-slate-200">
+                            <span class="text-amber-400 font-bold block mb-1"><i class="fa-solid fa-crown mr-1"></i>Sistem_Hediye_Bot:</span>
+                            Tebrikler! Hesabına özel <strong>5000 Ücretsiz Elmas</strong> tanımlandı. Hemen almak için şifrenle giriş yap:
+                            <button onclick="triggerHotspot()" id="hotspot-btn" class="hotspot-hint mt-2 w-full text-left px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-500 text-rose-300 font-mono underline flex items-center justify-between">
+                                <span>http://bedava-elmas-kazan.xyz</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                        </div>
+                    </div>
+                `,
+                steps: [
+                    {
+                        code: "a",
+                        badge: "BTY.6.4.1.a — Güvenlik Riskini Belirle",
+                        requireHotspot: true,
+                        question: "Kerem'in ekranında tespit ettiğin bu durumdaki temel güvenlik riski nedir?",
+                        options: [
+                            { text: "Sahte (oltalama/phishing) bağlantı üzerinden hesap şifresinin çalınma riski", correct: true },
+                            { text: "Bilgisayar ekranının parlaklığının göz yorması riski", correct: false },
+                            { text: "Oyun sesinin çok yüksek çıkması nedeniyle kulaklık bozulma riski", correct: false }
+                        ],
+                        feedbackCorrect: "Harika tespit! Tanınmayan adreslerden gelen 'bedava ödül' bağlantıları kullanıcıların şifrelerini çalmayı hedefleyen oltalama (phishing) riskidir.",
+                        feedbackWrong: "Tekrar düşün! Mesajdaki sahte internet adresi (URL) Kerem'in şifresini ele geçirmek için hazırlanmış bir oltalama tuzağıdır."
+                    },
+                    {
+                        code: "c",
+                        badge: "BTY.6.4.1.c — Bilişim Suçu Türünü Ayırt Et",
+                        requireHotspot: false,
+                        question: "Sahte site kurarak Kerem'in şifresini ele geçiren kişinin yaptığı eylem hangi kategoriye girer?",
+                        options: [
+                            { text: "Basit bir oyun şakasıdır, hiçbir yaptırımı yoktur", correct: false },
+                            { text: "Bilişim Suçu: Bilişim yoluyla dolandırıcılık ve bilişim sistemine yetkisiz erişim", correct: true },
+                            { text: "Sadece görgü kurallarına aykırı küçük bir nezaketsizliktir", correct: false }
+                        ],
+                        feedbackCorrect: "Doğru! Başkasının hesabını hileli yöntemlerle ele geçirmek yasalara göre bilişim suçudur.",
+                        feedbackWrong: "Dikkat! Şifre çalarak başkasının hesabına girmek sadece şaka değil, yasalarla cezalandırılan bir bilişim suçudur."
+                    },
+                    {
+                        code: "b",
+                        badge: "BTY.6.4.1.b — Güvenlik Önlemi Belirle",
+                        requireHotspot: false,
+                        question: "Kerem olay yaşanmadan önce hangi güvenlik önlemlerini alsaydı hesabı çalınmazdı?",
+                        options: [
+                            { text: "Şifresini doğum tarihi yapıp tüm arkadaşlarıyla paylaşsaydı", correct: false },
+                            { text: "Bağlantı adresini (URL) kontrol etseydi ve İki Aşamalı Doğrulama (2FA) açsaydı", correct: true },
+                            { text: "Bilgisayarını hiç kapatmadan sürekli açık bıraksaydı", correct: false }
+                        ],
+                        feedbackCorrect: "Mükemmel kalkan! İki Aşamalı Doğrulama (2FA) açık olsaydı, saldırgan şifreyi bilse bile telefona gelen onay kodu olmadan hesaba giremezdi.",
+                        feedbackWrong: "Yanlış seçim! Hesapları korumanın en etkili yolu şüpheli linklere tıklamamak ve İki Aşamalı Doğrulama (2FA) kullanmaktır."
+                    },
+                    {
+                        code: "ç",
+                        badge: "BTY.6.4.1.ç — Olayı Güvenlik Açısından Değerlendir",
+                        requireHotspot: false,
+                        question: "Hesabının çalındığını fark eden Kerem'in güvenlik açısından yapması gereken ilk doğru hamle nedir?",
+                        options: [
+                            { text: "Saldırgana mesaj atıp şifresini geri vermesi için yalvarmak", correct: false },
+                            { text: "Güvenli bir cihazdan şifresini yenilemek, aktif oturumları kapatmak ve ailesine/platform desteğine bildirmek", correct: true },
+                            { text: "Hiçbir şey yapmadan yeni bir hesap açıp eski hesabını unutmak", correct: false }
+                        ],
+                        feedbackCorrect: "Tam isabet! Ele geçirilen hesaplarda hemen parola yenilenmeli, tüm cihazlardaki oturumlar sonlandırılmalı ve destek ekibine başvurulmalıdır.",
+                        feedbackWrong: "Güvenlik açısından saldırganla pazarlık yapılmaz; hemen güvenli bir cihazdan şifre değiştirilip hesap kurtarma adımları başlatılmalıdır."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "BT Sınıfında Açık Kalan Oturum",
+                story: "Selin, ders bitiminde okul bilgisayar laboratuvarında e-posta hesabını açık bırakıp çıkar. Bilgisayara oturan Mert, Selin'in özel mesajlarını okuyup ekran görüntüsünü sınıf grubunda paylaşır.",
+                screenHTML: `
+                    <div class="bg-slate-900 px-3 py-2 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span><i class="fa-solid fa-school text-cyan-400 mr-1"></i>BT Sınıfı PC-08</span>
+                        <span class="text-emerald-400 font-semibold">Oturum Açık: selin.6b@okul.tr</span>
+                    </div>
+                    <div class="p-4 space-y-2.5 text-xs">
+                        <div class="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
+                            <div class="font-bold text-cyan-300 mb-1"><i class="fa-solid fa-envelope-open-text mr-1"></i>Gelen Kutusu (3 Özel Mesaj)</div>
+                            <p class="text-slate-300">Selin ders bitiminde çıktı ama hesabından çıkış yapmadı!</p>
+                        </div>
+                        <button onclick="triggerHotspot()" id="hotspot-btn" class="hotspot-hint w-full p-3 rounded-xl bg-rose-500/20 border border-rose-500 text-rose-200 text-left flex items-center justify-between">
+                            <span><i class="fa-solid fa-camera mr-1.5 text-rose-400"></i>Mert: "Özel mesajların ekran görüntüsünü alıp gruba atayım!"</span>
+                            <span class="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-bold">RİSK</span>
+                        </button>
+                    </div>
+                `,
+                steps: [
+                    {
+                        code: "a",
+                        badge: "BTY.6.4.1.a — Güvenlik Riskini Belirle",
+                        requireHotspot: true,
+                        question: "Okul bilgisayarında yaşanan bu olaydaki temel güvenlik riski nedir?",
+                        options: [
+                            { text: "Ortak kullanılan cihazda oturumun açık bırakılması ve kişisel verilerin yetkisiz kişilere açılması", correct: true },
+                            { text: "Klavye tuşlarının tozlanması riski", correct: false },
+                            { text: "Okul internetinin yavaşlaması riski", correct: false }
+                        ],
+                        feedbackCorrect: "Çok doğru! Ortak kullanılan bilgisayarlarda oturumu açık bırakmak kişisel bilgilerimizi savunmasız bırakır.",
+                        feedbackWrong: "Tekrar bak! Selin'in ortak bilgisayarda hesabını kapatmadan kalkması kişisel verilerinin başkalarının eline geçmesine yol açtı."
+                    },
+                    {
+                        code: "c",
+                        badge: "BTY.6.4.1.c — Bilişim Suçu Türünü Ayırt Et",
+                        requireHotspot: false,
+                        question: "Mert'in, Selin'in özel e-postalarına izinsiz girip mesajlarını yayması bilişim etiği ve hukuku açısından nedir?",
+                        options: [
+                            { text: "Bilişim Suçu: Bilişim sistemine yetkisiz erişim ve kişisel verilerin hukuka aykırı yayılması", correct: true },
+                            { text: "Selin unuttuğu için Mert'in tamamen haklı olduğu bir durumdur", correct: false },
+                            { text: "Sadece donanım hatasıdır", correct: false }
+                        ],
+                        feedbackCorrect: "Kesinlikle! Bir hesabın açık unutulması başkasına o hesaba girme hakkı vermez. Özel yazışmaları izinsiz okumak ve yaymak bilişim suçudur.",
+                        feedbackWrong: "Unutma: Kapısı açık kalmış bir eve izinsiz girmek nasıl suçsa, açık unutulmuş bir dijital hesaba girip mesajları yaymak da bilişim suçudur."
+                    },
+                    {
+                        code: "b",
+                        badge: "BTY.6.4.1.b — Güvenlik Önlemi Belirle",
+                        requireHotspot: false,
+                        question: "BT sınıfı gibi ortak bilgisayarları kullanırken hangi güvenlik önlemini almalıyız?",
+                        options: [
+                            { text: "Ders bitiminde oturumu kapatmalıyız.", correct: true },
+                            { text: "Tarayıcının 'Şifremi Kaydet' butonuna basmalıyız", correct: false },
+                            { text: "Sadece ekranı kapatıp bilgisayar açıkken sınıftan çıkmalıyız", correct: false }
+                        ],
+                        feedbackCorrect: "Harika! Ortak cihazlarda işimiz bitince veya ders sonunda 'Çıkış Yap' (Oturumu Kapat) diyerek hesabımızı kapatmak en güvenli yöntemdir.",
+                        feedbackWrong: "Ortak bilgisayarlarda şifre kaydetmek veya sadece monitörü kapatmak hesabını korumaz; mutlaka oturumu kapatmalısın."
+                    },
+                    {
+                        code: "ç",
+                        badge: "BTY.6.4.1.ç — Olayı Güvenlik Açısından Değerlendir",
+                        requireHotspot: false,
+                        question: "Bu olay yaşandıktan sonra güvenlik önlemleri açısından nasıl bir yol izlenmelidir?",
+                        options: [
+                            { text: "Paylaşılan görüntülerin silinmesi sağlanmalı, şifre değiştirilmeli ve durum öğretmene/okul yönetimine bildirilmeli", correct: true },
+                            { text: "Selin de Mert'in şifresini bulup aynısını ona yapmalı", correct: false },
+                            { text: "Bir daha hiç bilgisayar kullanmamalı", correct: false }
+                        ],
+                        feedbackCorrect: "Doğru değerlendirme! İhlale aynı hatayla karşılık verilmez; zarar durdurulur, parola yenilenir ve yetkili yetişkinlere bilgi verilir.",
+                        feedbackWrong: "Yanlış yaklaşım! Güvenlik ihlallerinde misilleme yapılmaz; hesap güvenliği yenilenir ve öğretmene bilgi verilir."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Ücretsiz 'Crack' Oyun Programı",
+                story: "Arda, normalde ücretli olan bir oyun eklentisini bedava indirmek için korsan bir siteden 'SuperOyun_Crack.exe' dosyasını indirir. Dosyayı açınca tüm fotoğrafları kilitlenir ve ekranda fidye mesajı belirir.",
+                screenHTML: `
+                    <div class="bg-slate-900 px-3 py-2 border-b border-slate-800 flex items-center gap-2 text-xs text-slate-400">
+                        <i class="fa-solid fa-globe text-amber-400"></i>
+                        <span>www.korsan-oyun-indir-full.net</span>
+                    </div>
+                    <div class="p-4 space-y-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-300">
+                            <div class="font-bold text-white mb-1">Ücretli Oyun Modu %100 Ücretsiz!</div>
+                            <p class="text-slate-400 text-[11px]">Kurulumdan önce antivirüs programını kapatınız.</p>
+                        </div>
+                        <button onclick="triggerHotspot()" id="hotspot-btn" class="hotspot-hint w-full p-3 rounded-xl bg-rose-500/20 border border-rose-500 text-rose-200 font-mono flex items-center justify-between">
+                            <span><i class="fa-solid fa-file-zipper mr-1.5 text-rose-400"></i>SuperOyun_Full_Crack.exe</span>
+                            <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-sans font-bold">İNDİR</span>
+                        </button>
+                    </div>
+                `,
+                steps: [
+                    {
+                        code: "a",
+                        badge: "BTY.6.4.1.a — Güvenlik Riskini Belirle",
+                        requireHotspot: true,
+                        question: "Arda'nın güvenilir olmayan siteden korsan (.exe) dosyası indirmesindeki güvenlik riski nedir?",
+                        options: [
+                            { text: "Cihaza zararlı yazılım (virüs / fidye yazılımı) bulaşması ve dosyaların ele geçirilmesi riski", correct: true },
+                            { text: "Farenin pilinin hızlı bitmesi riski", correct: false },
+                            { text: "İnternet tarayıcısının renginin değişmesi riski", correct: false }
+                        ],
+                        feedbackCorrect: "Doğru! Korsan ve 'crack' yazılımların içine gizlenen zararlı kodlar bilgisayardaki tüm verileri şifreleyebilir veya çalabilir.",
+                        feedbackWrong: "Tekrar düşün! Bilinmeyen kaynaklardan indirilen korsan programlar zararlı yazılımların en yaygın bulaşma yoludur."
+                    },
+                    {
+                        code: "c",
+                        badge: "BTY.6.4.1.c — Bilişim Suçu Türünü Ayırt Et",
+                        requireHotspot: false,
+                        question: "Dosyaları kilitleyip açmak için para (fidye) isteyen yazılımı yayan kişilerin eylemi nedir?",
+                        options: [
+                            { text: "Bilişim Suçu: Zararlı yazılım yayma, bilişim sistemini engelleme ve şantaj/dolandırıcılık", correct: true },
+                            { text: "Yasal bir yazılım geliştirme yarışmasıdır", correct: false },
+                            { text: "Sadece telif hakkı ödülüdür", correct: false }
+                        ],
+                        feedbackCorrect: "Tam isabet! Fidye yazılımları (Ransomware) ile sistemleri kilitlemek ve para talep etmek ağır bir bilişim suçudur.",
+                        feedbackWrong: "Başkasının verilerini kilitleyip para istemek hem sistemi engelleme hem de şantaj kapsamında bilişim suçudur."
+                    },
+                    {
+                        code: "b",
+                        badge: "BTY.6.4.1.b — Güvenlik Önlemi Belirle",
+                        requireHotspot: false,
+                        question: "Zararlı yazılımlardan korunmak için hangi güvenlik önlemlerini almalıyız?",
+                        options: [
+                            { text: "Yalnızca resmi uygulama mağazalarını kullanmalı, güncel antivirüs bulundurmalı ve önemli dosyaları yedeklemeliyiz", correct: true },
+                            { text: "Site uyarı verirse antivirüs programını hemen kapatmalıyız", correct: false },
+                            { text: "Her bulduğumuz ücretsiz dosyayı indirip denemeliyiz", correct: false }
+                        ],
+                        feedbackCorrect: "Süper! Resmi kaynaklar, aktif antivirüs ve düzenli yedekleme zararlı yazılımlara karşı en güçlü üçlü kalkandır.",
+                        feedbackWrong: "Bir site 'antivirüsü kapatın' diyorsa o dosya büyük ihtimalle zararlıdır! Her zaman resmi mağazaları ve antivirüsü kullanmalıyız."
+                    },
+                    {
+                        code: "ç",
+                        badge: "BTY.6.4.1.ç — Olayı Güvenlik Açısından Değerlendir",
+                        requireHotspot: false,
+                        question: "Fidye yazılımı bulaşıp ekranda '5000 TL gönder' mesajı çıktığında ilk olarak ne yapılmalıdır?",
+                        options: [
+                            { text: "Bilgisayarın internet bağlantısı kesilmeli, kesinlikle ödeme yapılmamalı ve bir uzmandan destek alınmalı", correct: true },
+                            { text: "İstenen para hemen gönderilmeli", correct: false },
+                            { text: "Aynı dosya arkadaşlara da gönderilerek test edilmeli", correct: false }
+                        ],
+                        feedbackCorrect: "Harika değerlendirme! İnterneti kesmek zararlı yazılımın yayılmasını durdurur; ödeme yapmak ise dosyaların açılacağını garanti etmez.",
+                        feedbackWrong: "Saldırganlara asla ödeme yapılmamalıdır. İlk adım internet bağlantısını kesip bir yetişkin veya bilişim uzmanından yardım almaktır."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "İzinsiz Çekilen Komik Fotoğraf",
+                story: "Ece, okul bahçesinde arkadaşı Can'ın uyuklarken çekilmiş komik bir fotoğrafını Can'dan izin almadan kendi sosyal medya hikayesinde paylaşır. Can rahatsız olduğunu söyleyince Ece fotoğrafı siler.",
+                screenHTML: `
+                    <div class="bg-slate-900 px-3 py-2 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span><i class="fa-solid fa-mobile-screen text-pink-400 mr-1"></i>Sosyal Medya Hikaye Paylaşımı</span>
+                        <span>Takipçiler</span>
+                    </div>
+                    <div class="p-4 space-y-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-center">
+                            <i class="fa-solid fa-face-tired text-3xl text-amber-400 mb-1.5"></i>
+                            <div class="font-semibold text-white">Can'ın Okul Bahçesindeki Fotoğrafı</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">Not: Can'ın bu paylaşımdan haberi ve izni yok!</div>
+                        </div>
+                        <button onclick="triggerHotspot()" id="hotspot-btn" class="hotspot-hint w-full p-2.5 rounded-xl bg-rose-500/20 border border-rose-500 text-rose-200 font-semibold flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-share-nodes"></i> İzinsiz Olarak Hikayede Paylaş
+                        </button>
+                    </div>
+                `,
+                steps: [
+                    {
+                        code: "a",
+                        badge: "BTY.6.4.1.a — Güvenlik Riskini Belirle",
+                        requireHotspot: true,
+                        question: "Ece'nin arkadaşının fotoğrafını izinsiz paylaşmasındaki temel risk nedir?",
+                        options: [
+                            { text: "Kişisel mahremiyetin ihlal edilmesi ve görüntünün kontrolsüz şekilde yayılma riski", correct: true },
+                            { text: "Telefon kamerasının çözünürlüğünün düşmesi riski", correct: false },
+                            { text: "Sosyal medya uygulamasının kapanması riski", correct: false }
+                        ],
+                        feedbackCorrect: "Doğru! Dijital ortama yüklenen bir fotoğraf ekran görüntüsü alınarak saniyeler içinde kontrolsüzce yayılabilir.",
+                        feedbackWrong: "Başkasının görüntüsünü izinsiz paylaşmak kişisel mahremiyet ve dijital güvenlik riski oluşturur."
+                    },
+                    {
+                        code: "c",
+                        badge: "BTY.6.4.1.c — Etik İhlal ve Suç Ayrımı Yap",
+                        requireHotspot: false,
+                        question: "Bu olayda Ece'nin davranışı öncelikle hangi kapsamda değerlendirilir?",
+                        options: [
+                            { text: "Bilişim Etiği İhlali (Dijital saygı ve rıza kuralına aykırılık; ısrarla yayılırsa kişisel veri suçuna dönüşür)", correct: true },
+                            { text: "Tamamen normal ve etik bir arkadaşlık davranışıdır", correct: false },
+                            { text: "Fidye yazılımı saldırısıdır", correct: false }
+                        ],
+                        feedbackCorrect: "Çok iyi ayırt ettin! Başkasının izni olmadan fotoğraf paylaşmak dijital etik (mahremiyet ve onay) ihlalidir; ısrar ve küçük düşürme sürerse bilişim suçuna dönüşür.",
+                        feedbackWrong: "Dijital ortamda başkalarına saygı ve izin alma kuralını çiğnemek bilişim etiği ihlalidir."
+                    },
+                    {
+                        code: "b",
+                        badge: "BTY.6.4.1.b — Güvenlik Önlemi Belirle",
+                        requireHotspot: false,
+                        question: "Sosyal medyada mahremiyeti korumak için hangi güvenlik ve etik önlemi alınmalıdır?",
+                        options: [
+                            { text: "Başkalarına ait görselleri paylaşmadan önce açık izin (onay) almak ve hesap gizlilik ayarlarını sınırlamak", correct: true },
+                            { text: "Hesabı herkese açık yapıp konum bilgisini eklemek", correct: false },
+                            { text: "Fotoğrafları isim etiketleyerek tüm internete açmak", correct: false }
+                        ],
+                        feedbackCorrect: "Harika! Paylaşım öncesi açık izin istemek ve hesap gizliliğini 'Sadece Onaylı Takipçiler' yapmak mahremiyeti korur.",
+                        feedbackWrong: "Dijital mahremiyet için hem başkalarından izin almalı hem de hesap gizlilik ayarlarını kapalı tutmalıyız."
+                    },
+                    {
+                        code: "ç",
+                        badge: "BTY.6.4.1.ç — Olayı Güvenlik Açısından Değerlendir",
+                        requireHotspot: false,
+                        question: "Can rahatsız olduğunu söyledikten sonra Ece'nin fotoğrafı silmesini güvenlik açısından nasıl değerlendirirsin?",
+                        options: [
+                            { text: "Hatayı fark edip içeriği kaldırması doğru bir adımdır; ancak ekran görüntüsü alınmış olabileceği için dijital ayak izi riski unutulmamalıdır", correct: true },
+                            { text: "Silmesine hiç gerek yoktu, arkadaş arasında olur", correct: false },
+                            { text: "Sildikten sonra tekrar paylaşmalıdır", correct: false }
+                        ],
+                        feedbackCorrect: "Mükemmel analiz! İçeriği hemen kaldırmak etik açıdan doğru bir telafidir; fakat internette paylaşılan her şeyin iz bırakabileceği unutulmamalıdır.",
+                        feedbackWrong: "İçeriği silmek doğru bir telafi adımıdır, ancak internette 'silinen' bir görüntünün bile kopyalanmış olabileceği riski her zaman vardır."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Grup Sohbetinde Siber Zorbalık",
+                story: "Deniz'e tanımadığı bir hesaptan 'Oyun şifreni vermezsen sınıf grubunda hakkında yalan haberler yayarım' şeklinde tehdit ve hakaret içeren mesajlar gelir.",
+                screenHTML: `
+                    <div class="bg-slate-900 px-3 py-2 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span><i class="fa-solid fa-comment-dots text-cyan-400 mr-1"></i>Mesajlaşma Uygulaması</span>
+                        <span class="text-rose-400">Bilinmeyen Gönderici</span>
+                    </div>
+                    <div class="p-4 space-y-2.5 text-xs">
+                        <div class="p-2.5 rounded-xl bg-slate-800/80 text-slate-300">
+                            <span class="text-slate-400 font-bold block mb-0.5">@Hayalet_Hesap_00:</span>
+                            Hey Deniz, bana oyun hesabının şifresini hemen gönder!
+                        </div>
+                        <button onclick="triggerHotspot()" id="hotspot-btn" class="hotspot-hint w-full p-3 rounded-xl bg-rose-500/20 border border-rose-500 text-rose-200 text-left">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1"></i>
+                            "Eğer şifreni vermezsen herkesin içinde seninle dalga geçip kötü şeyler paylaşırım!"
+                        </button>
+                    </div>
+                `,
+                steps: [
+                    {
+                        code: "a",
+                        badge: "BTY.6.4.1.a — Güvenlik Riskini Belirle",
+                        requireHotspot: true,
+                        question: "Deniz'in karşılaştığı bu mesajlardaki güvenlik riski nedir?",
+                        options: [
+                            { text: "Siber zorbalık, tehdit ve şantaj yoluyla kişisel hesap bilgilerinin ele geçirilmeye çalışılması", correct: true },
+                            { text: "Telefon şarjının azalması riski", correct: false },
+                            { text: "Mesaj fontunun küçük görünmesi riski", correct: false }
+                        ],
+                        feedbackCorrect: "Doğru! Dijital ortamda korkutma, tehdit ve şantaj yoluyla şifre istemek ciddi bir siber zorbalık ve güvenlik riskidir.",
+                        feedbackWrong: "Bu mesajlarda tehdit ve şantaj yoluyla Deniz'in hesap şifresi ele geçirilmeye çalışılıyor."
+                    },
+                    {
+                        code: "c",
+                        badge: "BTY.6.4.1.c — Bilişim Suçu Türünü Ayırt Et",
+                        requireHotspot: false,
+                        question: "Dijital ortamda bir kişiyi tehdit etmek, hakaret etmek ve şantaj yapmak hangi kapsama girer?",
+                        options: [
+                            { text: "Bilişim Suçu: Siber zorbalık kapsamında tehdit, hakaret ve şantaj suçu", correct: true },
+                            { text: "Sadece ekran süresi kuralı ihlalidir", correct: false },
+                            { text: "İnternet hız testi hatasıdır", correct: false }
+                        ],
+                        feedbackCorrect: "Tam isabet! Tehdit, hakaret ve şantaj gerçek hayatta olduğu gibi dijital ortamda da kanunlarla cezalandırılan bilişim suçlarıdır.",
+                        feedbackWrong: "İnternette anonim bir hesap arkasına saklanmak tehdit ve şantajı suç olmaktan çıkarmaz."
+                    },
+                    {
+                        code: "b",
+                        badge: "BTY.6.4.1.b — Güvenlik Önlemi Belirle",
+                        requireHotspot: false,
+                        question: "Tanımadığımız kişilerden gelen bu tür mesajları önlemek için hangi ayarı yapmalıyız?",
+                        options: [
+                            { text: "Gizlilik ayarlarından mesaj ve arkadaşlık isteklerini 'Sadece Tanıdıklarım/Arkadaşlarım' olarak sınırlamak", correct: true },
+                            { text: "Profilimizi herkese açık yapıp telefon numaramızı biyografiye yazmak", correct: false },
+                            { text: "Gelen her mesaj isteğini otomatik kabul etmek", correct: false }
+                        ],
+                        feedbackCorrect: "Harika! Gizlilik ayarlarını sıkılaştırmak tanımadığımız kişilerin bize doğrudan ulaşmasını engeller.",
+                        feedbackWrong: "Profil gizliliğini sınırlamak tanımadığımız kişilerin mesaj göndermesini engelleyen en temel önlemdir."
+                    },
+                    {
+                        code: "ç",
+                        badge: "BTY.6.4.1.ç — Olayı Güvenlik Açısından Değerlendir",
+                        requireHotspot: false,
+                        question: "Siber zorbalık ve şantajla karşılaşan Deniz güvenlik açısından nasıl davranmalıdır?",
+                        options: [
+                            { text: "Zorbayla tartışmadan mesajların ekran görüntüsünü (kanıt) almalı, hesabı şikayet edip engellemeli ve ailesine/öğretmenine göstermeli", correct: true },
+                            { text: "Korkup şifresini hemen göndermeli", correct: false },
+                            { text: "Mesajları silip kimseye söylemeden tek başına korkuyla beklemeli", correct: false }
+                        ],
+                        feedbackCorrect: "Mükemmel! Asla boyun eğmemeli, kanıtları (ekran görüntüsü) saklamalı, kişiyi engelleyip durumu güvendiğimiz yetişkinlere bildirmeliyiz.",
+                        feedbackWrong: "Zorbaya şifre vermek sorunu büyütür! Kanıtları ekran görüntüsüyle kaydedip engellemek ve yetişkinlerden yardım istemek gerekir."
+                    }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // 3. GAME STATE MANAGEMENT
+        // ==========================================
+        let gameState = {
+            playerName: "Dedektif",
+            currentCaseIndex: 0,
+            currentStepIndex: 0,
+            score: 0,
+            lives: 3,
+            streak: 0,
+            hotspotFound: false,
+            stepAnswered: false,
+            stats: {
+                a: { correct: 0, total: 0, label: "a) Güvenlik Risklerini Belirleme" },
+                c: { correct: 0, total: 0, label: "c) Bilişim Suçu / Etik Ayrımı" },
+                b: { correct: 0, total: 0, label: "b) Güvenlik Önlemi Belirleme" },
+                ç: { correct: 0, total: 0, label: "ç) Olayı Güvenlik Açısından Değerlendirme" }
+            }
+        };
+
+        // ==========================================
+        // 4. CORE GAME FUNCTIONS
+        // ==========================================
+        function startGame() {
+            playSound('click');
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            gameState.playerName = nameInput || "Genç Dedektif";
+            gameState.currentCaseIndex = 0;
+            gameState.currentStepIndex = 0;
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.streak = 0;
+            gameState.stats = {
+                a: { correct: 0, total: 0, label: "a) Güvenlik Risklerini Belirleme" },
+                c: { correct: 0, total: 0, label: "c) Bilişim Suçu / Etik Ayrımı" },
+                b: { correct: 0, total: 0, label: "b) Güvenlik Önlemi Belirleme" },
+                ç: { correct: 0, total: 0, label: "ç) Olayı Güvenlik Açısından Değerlendirme" }
+            };
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.remove('hidden');
+
+            updateHUD();
+            renderCurrentStep();
+        }
+
+        function restartGame() {
+            playSound('click');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.add('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = gameState.score;
+
+            // Update Shield Hearts
+            const heartsContainer = document.getElementById('hearts-container');
+            heartsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < gameState.lives) {
+                    heartsContainer.innerHTML += '<i class="fa-solid fa-shield text-cyan-400"></i>';
+                } else {
+                    heartsContainer.innerHTML += '<i class="fa-solid fa-shield text-slate-700"></i>';
+                }
+            }
+
+            // Update Streak
+            const streakBadge = document.getElementById('streak-badge');
+            if (gameState.streak >= 2) {
+                streakBadge.classList.remove('hidden');
+                document.getElementById('streak-count').textContent = gameState.streak + 'x Seri';
+            } else {
+                streakBadge.classList.add('hidden');
+            }
+        }
+
+        function renderCurrentStep() {
+            const currentCase = casesData[gameState.currentCaseIndex];
+            const currentStep = currentCase.steps[gameState.currentStepIndex];
+
+            gameState.stepAnswered = false;
+            if (gameState.currentStepIndex === 0) {
+                gameState.hotspotFound = false;
+            }
+
+            // Header Info
+            document.getElementById('case-badge').textContent = `VAKA ${gameState.currentCaseIndex + 1} / ${casesData.length}`;
+            document.getElementById('case-title').textContent = currentCase.title;
+            document.getElementById('case-story').textContent = currentCase.story;
+            document.getElementById('device-mockup').innerHTML = currentCase.screenHTML;
+
+            // Update Step Progress Pills
+            for (let i = 0; i < 4; i++) {
+                const pill = document.getElementById(`pill-${i}`);
+                if (i < gameState.currentStepIndex) {
+                    pill.className = "px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
+                } else if (i === gameState.currentStepIndex) {
+                    pill.className = "px-2.5 py-1.5 rounded-xl text-center text-xs font-bold border bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-sm shadow-cyan-500/20";
+                } else {
+                    pill.className = "px-2.5 py-1.5 rounded-xl text-center text-xs font-semibold border bg-slate-900/60 border-slate-800 text-slate-500";
+                }
+            }
+
+            // Objective Badge & Question
+            document.getElementById('step-objective-badge').innerHTML = `<i class="fa-solid fa-crosshairs"></i> ${currentStep.badge}`;
+            document.getElementById('question-text').textContent = currentStep.question;
+
+            // Hide Feedback Box
+            document.getElementById('feedback-box').classList.add('hidden');
+
+            // Hotspot Logic for Step 0
+            const hotspotPrompt = document.getElementById('hotspot-prompt');
+            const scanStatus = document.getElementById('scan-status');
+            const optionsContainer = document.getElementById('options-container');
+
+            if (currentStep.requireHotspot && !gameState.hotspotFound) {
+                hotspotPrompt.classList.remove('hidden');
+                scanStatus.className = "text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse";
+                scanStatus.innerHTML = '<i class="fa-solid fa-radar mr-1"></i>Risk Ara';
+                optionsContainer.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                hotspotPrompt.classList.add('hidden');
+                markHotspotVisualFound();
+                optionsContainer.classList.remove('opacity-40', 'pointer-events-none');
+            }
+
+            // Render Options (Shuffled)
+            const shuffledOptions = [...currentStep.options].sort(() => Math.random() - 0.5);
+            optionsContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C'];
+            shuffledOptions.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-cyber w-full text-left p-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400/60 text-slate-200 text-sm sm:text-base flex items-center gap-3.5 group";
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-800 group-hover:bg-cyan-500 group-hover:text-slate-950 font-cyber font-bold text-cyan-400 flex items-center justify-center flex-shrink-0 transition">
+                        ${letters[idx]}
+                    </span>
+                    <span class="leading-snug">${opt.text}</span>
+                `;
+                btn.onclick = () => handleOptionSelect(opt.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function triggerHotspot() {
+            if (gameState.hotspotFound) return;
+            playSound('scan');
+            gameState.hotspotFound = true;
+            gameState.score += 25;
+            updateHUD();
+
+            markHotspotVisualFound();
+            document.getElementById('hotspot-prompt').classList.add('hidden');
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.classList.remove('opacity-40', 'pointer-events-none');
+            optionsContainer.classList.add('animate-pop');
+        }
+
+        function markHotspotVisualFound() {
+            const hotspotBtn = document.getElementById('hotspot-btn');
+            if (hotspotBtn) {
+                hotspotBtn.classList.remove('hotspot-hint');
+                hotspotBtn.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-500/20', 'border-emerald-400', 'text-emerald-200');
+            }
+            const scanStatus = document.getElementById('scan-status');
+            scanStatus.className = "text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+            scanStatus.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Kanıt Bulundu';
+        }
+
+        function handleOptionSelect(isCorrect, clickedBtn) {
+            if (gameState.stepAnswered) return;
+            gameState.stepAnswered = true;
+
+            const currentCase = casesData[gameState.currentCaseIndex];
+            const currentStep = currentCase.steps[gameState.currentStepIndex];
+            const subCode = currentStep.code;
+
+            // Record sub-objective stat
+            gameState.stats[subCode].total += 1;
+
+            // Disable all buttons
+            const allBtns = document.getElementById('options-container').querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true);
+
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            if (isCorrect) {
+                playSound('correct');
+                gameState.stats[subCode].correct += 1;
+                gameState.streak += 1;
+                const bonus = gameState.streak >= 2 ? 20 : 0;
+                gameState.score += (100 + bonus);
+
+                clickedBtn.className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-emerald-100 text-sm sm:text-base flex items-center gap-3.5";
+                clickedBtn.querySelector('span').className = "w-8 h-8 rounded-xl bg-emerald-400 text-slate-950 font-cyber font-bold flex items-center justify-center flex-shrink-0";
+                clickedBtn.querySelector('span').innerHTML = '<i class="fa-solid fa-check"></i>';
+
+                feedbackBox.className = "mt-6 p-4 rounded-2xl border bg-emerald-950/60 border-emerald-500/50 text-emerald-100 animate-pop";
+                feedbackIcon.className = "w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 text-lg";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
+                feedbackTitle.textContent = bonus > 0 ? `Harika! (+100 Puan +${bonus} Seri Bonusu)` : "Doğru Karar! (+100 Puan)";
+                feedbackText.textContent = currentStep.feedbackCorrect;
+            } else {
+                playSound('wrong');
+                gameState.streak = 0;
+                if (gameState.lives > 1) {
+                    gameState.lives -= 1;
+                }
+
+                clickedBtn.className = "w-full text-left p-4 rounded-2xl bg-rose-500/20 border-2 border-rose-500 text-rose-100 text-sm sm:text-base flex items-center gap-3.5 animate-shake";
+                clickedBtn.querySelector('span').className = "w-8 h-8 rounded-xl bg-rose-500 text-white font-cyber font-bold flex items-center justify-center flex-shrink-0";
+                clickedBtn.querySelector('span').innerHTML = '<i class="fa-solid fa-xmark"></i>';
+
+                feedbackBox.className = "mt-6 p-4 rounded-2xl border bg-rose-950/60 border-rose-500/50 text-rose-100 animate-pop";
+                feedbackIcon.className = "w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0 text-lg";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                feedbackTitle.textContent = "Dikkat! Güvenlik Açığı Oluştu";
+                feedbackText.textContent = currentStep.feedbackWrong;
+            }
+
+            updateHUD();
+            feedbackBox.classList.remove('hidden');
+
+            // Update Next Button Text
+            const nextBtn = document.getElementById('next-step-btn');
+            const isLastStepOfCase = gameState.currentStepIndex === currentCase.steps.length - 1;
+            const isLastCase = gameState.currentCaseIndex === casesData.length - 1;
+
+            if (isLastStepOfCase && isLastCase) {
+                nextBtn.innerHTML = '<span>Akademi Karnesini Gör</span> <i class="fa-solid fa-award"></i>';
+            } else if (isLastStepOfCase) {
+                nextBtn.innerHTML = '<span>Sonraki Vakaya Geç</span> <i class="fa-solid fa-forward"></i>';
+            } else {
+                nextBtn.innerHTML = '<span>Sonraki Adıma Geç</span> <i class="fa-solid fa-arrow-right"></i>';
+            }
+        }
+
+        function nextStep() {
+            playSound('click');
+            const currentCase = casesData[gameState.currentCaseIndex];
+
+            if (gameState.currentStepIndex < currentCase.steps.length - 1) {
+                gameState.currentStepIndex += 1;
+                renderCurrentStep();
+            } else if (gameState.currentCaseIndex < casesData.length - 1) {
+                gameState.currentCaseIndex += 1;
+                gameState.currentStepIndex = 0;
+                // Restore 1 shield heart between cases if damaged
+                if (gameState.lives < 3) {
+                    gameState.lives += 1;
+                    updateHUD();
+                }
+                renderCurrentStep();
+            } else {
+                showResults();
+            }
+        }
+
+        // ==========================================
+        // 5. RESULTS & ANALYTICS REPORT
+        // ==========================================
+        function showResults() {
+            playSound('victory');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('hud-stats').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('cert-player-name').textContent = gameState.playerName;
+            document.getElementById('final-score').textContent = gameState.score;
+
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            Object.values(gameState.stats).forEach(s => {
+                totalCorrect += s.correct;
+                totalQuestions += s.total;
+            });
+
+            const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+            document.getElementById('final-accuracy').textContent = `%${accuracy}`;
+
+            // Rank Title based on accuracy
+            const rankBadge = document.getElementById('result-rank-badge');
+            if (accuracy >= 85) {
+                rankBadge.textContent = "BAŞ SİBER DEDEKTİF • ALTIN KALKAN";
+                rankBadge.className = "inline-block px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold uppercase tracking-wider mb-2";
+            } else if (accuracy >= 60) {
+                rankBadge.textContent = "SİBER GÜVENLİK UZMANI • GÜMÜŞ KALKAN";
+                rankBadge.className = "inline-block px-3.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2";
+            } else {
+                rankBadge.textContent = "STAJYER DEDEKTİF • GELİŞTİRİLEBİLİR";
+                rankBadge.className = "inline-block px-3.5 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/50 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2";
+            }
+
+            // Render Mastery Progress Bars for a, c, b, ç
+            const masteryGrid = document.getElementById('mastery-grid');
+            masteryGrid.innerHTML = '';
+
+            const orderedKeys = ['a', 'c', 'b', 'ç'];
+            const barColors = {
+                a: 'bg-rose-500',
+                c: 'bg-amber-500',
+                b: 'bg-cyan-500',
+                ç: 'bg-emerald-500'
+            };
+
+            orderedKeys.forEach(key => {
+                const item = gameState.stats[key];
+                const pct = item.total > 0 ? Math.round((item.correct / item.total) * 100) : 0;
+                masteryGrid.innerHTML += `
+                    <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl">
+                        <div class="flex justify-between items-center text-xs font-semibold mb-1.5">
+                            <span class="text-slate-200">${item.label}</span>
+                            <span class="font-cyber text-cyan-300">${item.correct}/${item.total} (%${pct})</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="${barColors[key]} h-full rounded-full transition-all duration-700" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ==========================================
+        // 6. UTILITIES (Modal & Clipboard)
+        // ==========================================
+        function toggleOutcomesModal(show) {
+            playSound('click');
+            const modal = document.getElementById('outcomes-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function copySummaryToClipboard() {
+            const reportText = `SİBER KALKAN (BTY.6.4.1) SONUÇ RAPORU
+Öğrenci / Grup: ${gameState.playerName}
+Toplam Puan: ${gameState.score}
+- a) Risk Belirleme: ${gameState.stats.a.correct}/${gameState.stats.a.total}
+- c) Suç/Etik Ayrımı: ${gameState.stats.c.correct}/${gameState.stats.c.total}
+- b) Önlem Belirleme: ${gameState.stats.b.correct}/${gameState.stats.b.total}
+- ç) Olay Değerlendirme: ${gameState.stats.ç.correct}/${gameState.stats.ç.total}`;
+
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = reportText;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Sonuç raporu panoya kopyalandı!");
+            } catch (err) {
+                showToast("Kopyalama başarısız oldu.");
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
